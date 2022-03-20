@@ -1,8 +1,9 @@
 # assets_picker_ot
 
-Simple and easy to implement your markdown editor, it uses its own parser.
+Quickly select resources from the gallery.
 
 ![show](https://xia-weiyang.github.io/gif/assets_picker_ot.gif)
+
 
 ``` dart
 Navigator.push(context, MaterialPageRoute(builder: (_con) {
