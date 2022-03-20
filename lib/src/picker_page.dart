@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:assets_picker_ot/src/grid_image_widget.dart';
@@ -6,7 +7,17 @@ import 'package:flutter/scheduler.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 class PickerPage extends StatefulWidget {
-  const PickerPage({Key? key}) : super(key: key);
+  const PickerPage({
+    Key? key,
+    this.overMaxSelected,
+    this.maxSelected = 1,
+  }) : super(key: key);
+
+  /// 一些错误的提示回调
+  final OverMaxSelected? overMaxSelected;
+
+  /// 最大的可选择数量
+  final int maxSelected;
 
   @override
   PickerPageState createState() => PickerPageState();
@@ -18,6 +29,9 @@ class PickerPageState extends State<PickerPage> {
   // 当前页面显示的资源图片
   final List<AssetEntity> _entities = [];
   AssetPathEntity? _currentPath;
+
+  // 已选择的资源
+  final List<AssetEntity> _selected = [];
 
   // 是否正在切换路径
   bool _isSwitchingPath = false;
@@ -34,8 +48,12 @@ class PickerPageState extends State<PickerPage> {
     } else {
       // Limited(iOS) or Rejected, use `==` for more precise judgements.
       // You can call `PhotoManager.openSetting()` to open settings for further steps.
-      // 权限拒绝 退出当前页面
+      debugPrint("权限拒绝 退出当前页面");
+      // if(widget.showTip != null){
+      //   widget.showTip!(null, "您拒绝了相册权限，请前往");
+      // }
       Navigator.of(context).pop();
+      PhotoManager.openSetting();
       return false;
     }
   }
@@ -121,6 +139,21 @@ class PickerPageState extends State<PickerPage> {
                     });
                   },
                 ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.done),
+              onPressed: () async {
+                final fileList = <File>[];
+                for (var it in _selected) {
+                  final f = await it.loadFile();
+                  if (f != null) {
+                    fileList.add(f);
+                  }
+                }
+                Navigator.pop(context, fileList);
+              },
+            )
+          ],
         ),
         body: Stack(
           children: [
@@ -211,44 +244,50 @@ class PickerPageState extends State<PickerPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.all(4),
-                child: FutureBuilder(
-                  future: _getFirstThumbFromPathEntity(pathEntity),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<Uint8List?> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (snapshot.hasData) {
-                        return Image.memory(
-                          snapshot.data!,
-                          fit: BoxFit.cover,
-                          width: imageSize,
-                          height: imageSize,
-                        );
+          Expanded(
+            child: Row(
+              children: [
+                const SizedBox(width: 6),
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: FutureBuilder(
+                    future: _getFirstThumbFromPathEntity(pathEntity),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<Uint8List?> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasData) {
+                          return Image.memory(
+                            snapshot.data!,
+                            fit: BoxFit.cover,
+                            width: imageSize,
+                            height: imageSize,
+                          );
+                        }
                       }
-                    }
-                    return const SizedBox(
-                      width: imageSize,
-                      height: imageSize,
-                    );
-                  },
+                      return const SizedBox(
+                        width: imageSize,
+                        height: imageSize,
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${pathEntity.name} (${pathEntity.assetCount})',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.brightness ==
-                          Brightness.dark
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 18,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${pathEntity.name} (${pathEntity.assetCount})',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.brightness ==
+                              Brightness.dark
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.onPrimary,
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -274,7 +313,29 @@ class PickerPageState extends State<PickerPage> {
       padding: const EdgeInsets.only(top: 2, bottom: 2),
       itemCount: _entities.length,
       itemBuilder: (BuildContext context, int index) {
-        return ImageItemWidget(_entities[index]);
+        final entity = _entities[index];
+        return GestureDetector(
+          child: ImageItemWidget(
+            entity,
+            showNum: _selected.indexOf(entity) + 1,
+          ),
+          onTap: () {
+            final contains = _selected.contains(entity);
+            setState(() {
+              if (contains) {
+                _selected.remove(entity);
+              } else {
+                if (_selected.length >= widget.maxSelected) {
+                  if (widget.overMaxSelected != null) {
+                    widget.overMaxSelected!(context);
+                    return;
+                  }
+                }
+                _selected.add(entity);
+              }
+            });
+          },
+        );
       },
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         //单个子Widget的水平最大宽度
@@ -287,3 +348,6 @@ class PickerPageState extends State<PickerPage> {
     );
   }
 }
+
+// 超过最大的可选择数量
+typedef OverMaxSelected = Function(BuildContext context);

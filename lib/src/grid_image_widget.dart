@@ -6,13 +6,11 @@ import 'package:photo_manager/photo_manager.dart';
 class ImageItemWidget extends StatefulWidget {
   const ImageItemWidget(
     this.asset, {
-    this.showNum = 0,
     Key? key,
+    this.showNum = 0,
   }) : super(key: key);
 
   final AssetEntity asset;
-
-  /// 序号显示
   final int showNum;
 
   @override
@@ -20,6 +18,7 @@ class ImageItemWidget extends StatefulWidget {
 }
 
 class ImageItemState extends State<ImageItemWidget> {
+  Uint8List? _data;
 
   /// 获取缩略图
   Future<Uint8List?> _getThumbFromAssetEntity(
@@ -32,25 +31,59 @@ class ImageItemState extends State<ImageItemWidget> {
   @override
   Widget build(BuildContext context) {
     int size = MediaQuery.of(context).size.width ~/ 4;
-    return SizedBox(
-      width: double.infinity,
-      height: double.infinity,
-      child: FutureBuilder(
-        future: _getThumbFromAssetEntity(widget.asset, size),
-        builder: (BuildContext context,
-        AsyncSnapshot<Uint8List?> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              return Image.memory(
-                snapshot.data!,
+    return Stack(children: [
+      SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: _data != null
+            ? Image.memory(
+                _data!,
                 fit: BoxFit.cover,
-              );
-            }
-          }
-          return const SizedBox(
-          );
-        },
+              )
+            : FutureBuilder(
+                future: _getThumbFromAssetEntity(widget.asset, size),
+                builder:
+                    (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.hasData) {
+                      _data = snapshot.data;
+                      return Image.memory(
+                        snapshot.data!,
+                        fit: BoxFit.cover,
+                      );
+                    }
+                  }
+                  return const SizedBox();
+                },
+              ),
       ),
-    );
+      widget.showNum <= 0
+          ? Container()
+          : Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4, right: 4),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Theme.of(context).primaryColor.withAlpha(180),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.showNum.toString(),
+                      textScaleFactor: 1,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+    ]);
   }
 }
