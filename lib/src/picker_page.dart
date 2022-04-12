@@ -79,7 +79,7 @@ class PickerPageState extends State<PickerPage> {
       end: 1,
     ))
         .elementAt(0);
-    final Uint8List? assetData = await asset.thumbDataWithSize(80, 80);
+    final Uint8List? assetData = await asset.thumbDataWithSize(100, 100);
     return assetData;
   }
 

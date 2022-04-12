@@ -41,7 +41,7 @@ class ImageItemState extends State<ImageItemWidget> {
                 fit: BoxFit.cover,
               )
             : FutureBuilder(
-                future: _getThumbFromAssetEntity(widget.asset, size),
+                future: _getThumbFromAssetEntity(widget.asset, (size * 1.5).toInt()),
                 builder:
                     (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
