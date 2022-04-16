@@ -38,6 +38,8 @@ class PickerPageState extends State<PickerPage> {
 
   final _pageMaxNum = 80;
 
+  final ScrollController _scrollController = ScrollController();
+
   /// 权限获取
   Future<bool> _permissionCheck() async {
     final PermissionState _ps = await PhotoManager.requestPermissionExtend();
@@ -99,7 +101,7 @@ class PickerPageState extends State<PickerPage> {
   Future<void> _queryAssetsList(int start) async {
     if (_currentPath == null) return;
     final List<AssetEntity> entities =
-        await _currentPath!.getAssetListRange(start: start, end: _pageMaxNum);
+        await _currentPath!.getAssetListRange(start: start, end: _pageMaxNum + start);
     setState(() {
       if (start == 0) _entities.clear();
       _entities.addAll(entities);
@@ -112,6 +114,14 @@ class PickerPageState extends State<PickerPage> {
     SchedulerBinding.instance?.addPostFrameCallback((timeStamp) async {
       if (await _permissionCheck()) {
         await _getPath();
+      }
+    });
+
+    // 滑动监听
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+          _queryAssetsList(_entities.length);
       }
     });
   }
@@ -310,6 +320,7 @@ class PickerPageState extends State<PickerPage> {
   /// 资源网格列表
   Widget _buildGlideWidget() {
     return GridView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.only(top: 2, bottom: 2),
       itemCount: _entities.length,
       itemBuilder: (BuildContext context, int index) {
