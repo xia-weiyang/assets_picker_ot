@@ -81,7 +81,8 @@ class PickerPageState extends State<PickerPage> {
       end: 1,
     ))
         .elementAt(0);
-    final Uint8List? assetData = await asset.thumbDataWithSize(100, 100);
+    final Uint8List? assetData =
+        await asset.thumbnailDataWithSize(const ThumbnailSize(100, 100));
     return assetData;
   }
 
@@ -100,8 +101,8 @@ class PickerPageState extends State<PickerPage> {
   /// [start] 开始位置
   Future<void> _queryAssetsList(int start) async {
     if (_currentPath == null) return;
-    final List<AssetEntity> entities =
-        await _currentPath!.getAssetListRange(start: start, end: _pageMaxNum + start);
+    final List<AssetEntity> entities = await _currentPath!
+        .getAssetListRange(start: start, end: _pageMaxNum + start);
     setState(() {
       if (start == 0) _entities.clear();
       _entities.addAll(entities);
@@ -111,7 +112,7 @@ class PickerPageState extends State<PickerPage> {
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance?.addPostFrameCallback((timeStamp) async {
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
       if (await _permissionCheck()) {
         await _getPath();
       }
@@ -121,7 +122,7 @@ class PickerPageState extends State<PickerPage> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-          _queryAssetsList(_entities.length);
+        _queryAssetsList(_entities.length);
       }
     });
   }

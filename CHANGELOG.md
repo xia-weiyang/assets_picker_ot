@@ -1,3 +1,6 @@
+## 0.0.4
+- upgrade to flutter 3
+
 ## 0.0.3
 - fix unable to load more resources
 

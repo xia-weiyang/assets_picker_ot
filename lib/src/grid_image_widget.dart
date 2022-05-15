@@ -25,7 +25,7 @@ class ImageItemState extends State<ImageItemWidget> {
     AssetEntity asset,
     int size,
   ) async {
-    return await asset.thumbDataWithSize(size, size);
+    return await asset.thumbnailDataWithSize(ThumbnailSize(size, size));
   }
 
   @override
