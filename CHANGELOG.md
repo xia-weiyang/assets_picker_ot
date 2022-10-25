@@ -1,3 +1,6 @@
+## 0.0.5
+- upgrade photo_manager
+
 ## 0.0.4
 - upgrade to flutter 3
 
