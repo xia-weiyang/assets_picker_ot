@@ -1,3 +1,6 @@
+## 0.0.6
+- Optimize loading state
+
 ## 0.0.5
 - upgrade photo_manager
 

@@ -1,6 +1,6 @@
 name: assets_picker_ot
 description: Quickly select resources from the gallery.
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/xia-weiyang/assets_picker_ot
 
 environment:

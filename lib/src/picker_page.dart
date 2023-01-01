@@ -36,6 +36,9 @@ class PickerPageState extends State<PickerPage> {
   // 是否正在切换路径
   bool _isSwitchingPath = false;
 
+  // 是否暂无数据
+  bool _isNoData = false;
+
   final _pageMaxNum = 80;
 
   final ScrollController _scrollController = ScrollController();
@@ -65,10 +68,15 @@ class PickerPageState extends State<PickerPage> {
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
       type: RequestType.image,
     );
+    debugPrint('_getPath $paths');
     _paths.clear();
     _paths.addAll(paths);
     if (_paths.isNotEmpty) {
       _tapPathList(_paths.first);
+    } else {
+      setState(() {
+        _isNoData = true;
+      });
     }
   }
 
@@ -90,6 +98,7 @@ class PickerPageState extends State<PickerPage> {
   /// 然后通过[pathEntity]找到当前的图库列表
   void _tapPathList(AssetPathEntity pathEntity) {
     setState(() {
+      _isNoData = false;
       _isSwitchingPath = false;
       _currentPath = pathEntity;
     });
@@ -135,7 +144,7 @@ class PickerPageState extends State<PickerPage> {
           elevation:
               _isSwitchingPath ? 0 : Theme.of(context).appBarTheme.elevation,
           title: _currentPath == null
-              ? const Text('获取中')
+              ? const SizedBox()
               : GestureDetector(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -151,23 +160,26 @@ class PickerPageState extends State<PickerPage> {
                   },
                 ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.done),
-              onPressed: () async {
-                final fileList = <File>[];
-                for (var it in _selected) {
-                  final f = await it.loadFile();
-                  if (f != null) {
-                    fileList.add(f);
+            if (_currentPath != null)
+              IconButton(
+                icon: const Icon(Icons.done),
+                onPressed: () async {
+                  final fileList = <File>[];
+                  for (var it in _selected) {
+                    final f = await it.loadFile();
+                    if (f != null) {
+                      fileList.add(f);
+                    }
                   }
-                }
-                Navigator.pop(context, fileList);
-              },
-            )
+                  Navigator.pop(context, fileList);
+                },
+              ),
           ],
         ),
         body: Stack(
           children: [
+            if (_currentPath == null)
+              _isNoData ? _buildNoDataTip() : _buildLoading(),
             Positioned.fill(
               child: _buildGlideWidget(),
             ),
@@ -356,6 +368,22 @@ class PickerPageState extends State<PickerPage> {
         mainAxisSpacing: 2,
         //垂直单个子Widget之间间距
         crossAxisSpacing: 2,
+      ),
+    );
+  }
+
+  /// 加载中
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildNoDataTip() {
+    return const Center(
+      child: Text(
+        '暂无数据',
+        style: TextStyle(fontSize: 16),
       ),
     );
   }
