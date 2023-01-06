@@ -1,3 +1,6 @@
+## 0.0.7
+- Fix Android 13 Permission Bug
+
 ## 0.0.6
 - Optimize loading state
 
