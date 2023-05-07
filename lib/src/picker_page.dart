@@ -11,9 +11,11 @@ class PickerPage extends StatefulWidget {
     Key? key,
     this.overMaxSelected,
     this.maxSelected = 1,
+    this.controller,
     this.appBarBackgroundColor,
     this.appBarElevation,
     this.appBarLeading,
+    this.appBarDone,
     this.iconColor,
     this.titleTextStyle,
   }) : super(key: key);
@@ -24,9 +26,12 @@ class PickerPage extends StatefulWidget {
   /// 最大的可选择数量
   final int maxSelected;
 
+  final PickController? controller;
+
   final Color? appBarBackgroundColor;
   final double? appBarElevation;
   final Widget? appBarLeading;
+  final Widget? appBarDone;
   final Color? iconColor;
   final TextStyle? titleTextStyle;
 
@@ -129,6 +134,17 @@ class PickerPageState extends State<PickerPage> {
     });
   }
 
+  Future<void> done() async {
+    final fileList = <File>[];
+    for (var it in _selected) {
+      final f = await it.loadFile();
+      if (f != null) {
+        fileList.add(f);
+      }
+    }
+    Navigator.pop(context, fileList);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -145,6 +161,14 @@ class PickerPageState extends State<PickerPage> {
         _queryAssetsList(_entities.length);
       }
     });
+
+    widget.controller?.done = done;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.controller?.dispose();
   }
 
   @override
@@ -184,22 +208,14 @@ class PickerPageState extends State<PickerPage> {
                 ),
           actions: [
             if (_currentPath != null)
-              IconButton(
-                icon: Icon(
-                  Icons.done,
-                  color: widget.iconColor,
-                ),
-                onPressed: () async {
-                  final fileList = <File>[];
-                  for (var it in _selected) {
-                    final f = await it.loadFile();
-                    if (f != null) {
-                      fileList.add(f);
-                    }
-                  }
-                  Navigator.pop(context, fileList);
-                },
-              ),
+              widget.appBarDone ??
+                  IconButton(
+                    icon: Icon(
+                      Icons.done,
+                      color: widget.iconColor,
+                    ),
+                    onPressed: done,
+                  ),
           ],
         ),
         body: Stack(
@@ -264,6 +280,7 @@ class PickerPageState extends State<PickerPage> {
                 maxHeight: MediaQuery.of(context).size.height / 2,
               ),
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: <Widget>[
                     const SizedBox(height: 6),
@@ -325,13 +342,14 @@ class PickerPageState extends State<PickerPage> {
                     '${pathEntity.name} (${pathEntity.assetCount})',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.brightness ==
-                              Brightness.dark
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 18,
-                    ),
+                    style: (widget.titleTextStyle ??
+                            TextStyle(
+                              color: Theme.of(context).colorScheme.brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.onPrimary,
+                            ))
+                        .copyWith(fontSize: 18),
                   ),
                 ),
               ],
@@ -343,10 +361,7 @@ class PickerPageState extends State<PickerPage> {
                 ? Icon(
                     Icons.done,
                     size: 24,
-                    color: Theme.of(context).colorScheme.brightness ==
-                            Brightness.dark
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Theme.of(context).colorScheme.onPrimary,
+                    color: widget.iconColor,
                   )
                 : const SizedBox(),
           ),
@@ -411,6 +426,14 @@ class PickerPageState extends State<PickerPage> {
         style: TextStyle(fontSize: 16),
       ),
     );
+  }
+}
+
+class PickController {
+  VoidCallback? done;
+
+  void dispose() {
+    done = null;
   }
 }
 
