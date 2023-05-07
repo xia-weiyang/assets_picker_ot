@@ -41,6 +41,7 @@ class PickerPage extends StatefulWidget {
 
 class PickerPageState extends State<PickerPage> {
   final List<AssetPathEntity> _paths = [];
+  final assertCount = <String, int>{};
 
   // 当前页面显示的资源图片
   final List<AssetEntity> _entities = [];
@@ -86,6 +87,10 @@ class PickerPageState extends State<PickerPage> {
     );
     debugPrint('_getPath $paths');
     _paths.clear();
+    assertCount.clear();
+    for (var pathEntity in paths) {
+      assertCount[pathEntity.id] = await pathEntity.assetCountAsync;
+    }
     _paths.addAll(paths);
     if (_paths.isNotEmpty) {
       _tapPathList(_paths.first);
@@ -208,14 +213,20 @@ class PickerPageState extends State<PickerPage> {
                 ),
           actions: [
             if (_currentPath != null)
-              widget.appBarDone ??
-                  IconButton(
-                    icon: Icon(
-                      Icons.done,
-                      color: widget.iconColor,
-                    ),
-                    onPressed: done,
-                  ),
+              LayoutBuilder(builder: (context, constraint) {
+                return SizedBox(
+                  width: constraint.maxHeight,
+                  height: constraint.maxHeight,
+                  child: widget.appBarDone ??
+                      IconButton(
+                        icon: Icon(
+                          Icons.done,
+                          color: widget.iconColor,
+                        ),
+                        onPressed: done,
+                      ),
+                );
+              }),
           ],
         ),
         body: Stack(
@@ -339,7 +350,7 @@ class PickerPageState extends State<PickerPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '${pathEntity.name} (${pathEntity.assetCount})',
+                    '${pathEntity.name} (${assertCount[pathEntity.id]})',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     style: (widget.titleTextStyle ??
