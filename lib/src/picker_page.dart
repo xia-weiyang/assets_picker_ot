@@ -11,6 +11,11 @@ class PickerPage extends StatefulWidget {
     Key? key,
     this.overMaxSelected,
     this.maxSelected = 1,
+    this.appBarBackgroundColor,
+    this.appBarElevation,
+    this.appBarLeading,
+    this.iconColor,
+    this.titleTextStyle,
   }) : super(key: key);
 
   /// 一些错误的提示回调
@@ -18,6 +23,12 @@ class PickerPage extends StatefulWidget {
 
   /// 最大的可选择数量
   final int maxSelected;
+
+  final Color? appBarBackgroundColor;
+  final double? appBarElevation;
+  final Widget? appBarLeading;
+  final Color? iconColor;
+  final TextStyle? titleTextStyle;
 
   @override
   PickerPageState createState() => PickerPageState();
@@ -141,16 +152,28 @@ class PickerPageState extends State<PickerPage> {
     return Material(
       child: Scaffold(
         appBar: AppBar(
-          elevation:
-              _isSwitchingPath ? 0 : Theme.of(context).appBarTheme.elevation,
+          leading: widget.appBarLeading,
+          backgroundColor: widget.appBarBackgroundColor ??
+              Theme.of(context).colorScheme.primary,
+          elevation: _isSwitchingPath
+              ? 0
+              : widget.appBarElevation ??
+                  Theme.of(context).appBarTheme.elevation,
           title: _currentPath == null
               ? const SizedBox()
               : GestureDetector(
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      Text(_currentPath?.name ?? ''),
-                      const Icon(Icons.arrow_drop_down),
+                      Text(
+                        _currentPath?.name ?? '',
+                        style: widget.titleTextStyle,
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: widget.titleTextStyle?.color,
+                      ),
                     ],
                   ),
                   onTap: () {
@@ -162,7 +185,10 @@ class PickerPageState extends State<PickerPage> {
           actions: [
             if (_currentPath != null)
               IconButton(
-                icon: const Icon(Icons.done),
+                icon: Icon(
+                  Icons.done,
+                  color: widget.iconColor,
+                ),
                 onPressed: () async {
                   final fileList = <File>[];
                   for (var it in _selected) {
@@ -204,7 +230,7 @@ class PickerPageState extends State<PickerPage> {
           },
           child: AnimatedOpacity(
             duration: kThemeAnimationDuration,
-            opacity: _isSwitchingPath ? .75 : 0,
+            opacity: _isSwitchingPath ? .55 : 0,
             child: const ColoredBox(color: Colors.black),
           ),
         ),
@@ -231,9 +257,8 @@ class PickerPageState extends State<PickerPage> {
             curve: Curves.easeInOut,
             opacity: _isSwitchingPath ? 1 : 0,
             child: Container(
-              color: Theme.of(context).colorScheme.brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.surface
-                  : Theme.of(context).colorScheme.primary,
+              color: widget.appBarBackgroundColor ??
+                  Theme.of(context).colorScheme.primary,
               width: double.infinity,
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height / 2,

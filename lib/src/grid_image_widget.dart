@@ -41,7 +41,8 @@ class ImageItemState extends State<ImageItemWidget> {
                 fit: BoxFit.cover,
               )
             : FutureBuilder(
-                future: _getThumbFromAssetEntity(widget.asset, (size * 1.5).toInt()),
+                future: _getThumbFromAssetEntity(
+                    widget.asset, (size * 1.5).toInt()),
                 builder:
                     (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
@@ -68,7 +69,7 @@ class ImageItemState extends State<ImageItemWidget> {
                   height: 26,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
-                    color: Theme.of(context).primaryColor.withAlpha(180),
+                    color: Theme.of(context).colorScheme.primary.withAlpha(180),
                   ),
                   child: Center(
                     child: Text(
