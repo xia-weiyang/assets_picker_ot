@@ -1,3 +1,6 @@
+## 0.0.8
+- Support for more custom properties
+
 ## 0.0.7
 - Fix Android 13 Permission Bug
 
