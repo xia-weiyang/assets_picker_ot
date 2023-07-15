@@ -11,6 +11,9 @@ class PickerPage extends StatefulWidget {
     Key? key,
     this.overMaxSelected,
     this.maxSelected = 1,
+    this.showCamera = false,
+    this.cameraWidget,
+    this.onTapCamera,
     this.controller,
     this.appBarBackgroundColor,
     this.appBarElevation,
@@ -25,6 +28,10 @@ class PickerPage extends StatefulWidget {
 
   /// 最大的可选择数量
   final int maxSelected;
+
+  final bool showCamera;
+  final Widget? cameraWidget;
+  final OnTapCamera? onTapCamera;
 
   final PickController? controller;
 
@@ -49,6 +56,7 @@ class PickerPageState extends State<PickerPage> {
 
   // 已选择的资源
   final List<AssetEntity> _selected = [];
+  final File? cameraFile = null;
 
   // 是否正在切换路径
   bool _isSwitchingPath = false;
@@ -146,6 +154,9 @@ class PickerPageState extends State<PickerPage> {
       if (f != null) {
         fileList.add(f);
       }
+    }
+    if (cameraFile != null) {
+      fileList.add(cameraFile!);
     }
     Navigator.pop(context, fileList);
   }
@@ -386,8 +397,31 @@ class PickerPageState extends State<PickerPage> {
     return GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.only(top: 2, bottom: 2),
-      itemCount: _entities.length,
+      itemCount: _entities.length + (widget.showCamera ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
+        if (widget.showCamera) {
+          if (index == 0) {
+            return GestureDetector(
+              onTap: () async {
+                if (widget.onTapCamera != null) {
+                  await widget.onTapCamera!();
+                  await done();
+                }
+              },
+              child: widget.cameraWidget ??
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      size: 50,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+            );
+          }
+          index--;
+        }
         final entity = _entities[index];
         return GestureDetector(
           child: ImageItemWidget(
@@ -450,3 +484,5 @@ class PickController {
 
 // 超过最大的可选择数量
 typedef OverMaxSelected = Function(BuildContext context);
+
+typedef OnTapCamera = Future<File> Function();

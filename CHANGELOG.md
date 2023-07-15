@@ -1,3 +1,6 @@
+## 0.0.9
+- Support camera
+
 ## 0.0.8
 - Support for more custom properties
 

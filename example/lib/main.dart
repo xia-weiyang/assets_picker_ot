@@ -52,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_con) {
                   return PickerPage(
+                    showCamera: false,
                     maxSelected: 3,
                     overMaxSelected: (context) {
                       debugPrint('最多选择3张图片');
