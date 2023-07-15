@@ -148,6 +148,7 @@ class PickerPageState extends State<PickerPage> {
   }
 
   Future<void> done() async {
+    if (!mounted) return;
     final fileList = <File>[];
     for (var it in _selected) {
       final f = await it.loadFile();
@@ -411,7 +412,9 @@ class PickerPageState extends State<PickerPage> {
                 }
                 if (widget.onTapCamera != null) {
                   cameraFile = await widget.onTapCamera!();
-                  await done();
+                  if (cameraFile != null) {
+                    await done();
+                  }
                 }
               },
               child: widget.cameraWidget ??
