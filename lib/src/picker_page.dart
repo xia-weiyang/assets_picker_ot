@@ -56,7 +56,7 @@ class PickerPageState extends State<PickerPage> {
 
   // 已选择的资源
   final List<AssetEntity> _selected = [];
-  final File? cameraFile = null;
+  File? cameraFile;
 
   // 是否正在切换路径
   bool _isSwitchingPath = false;
@@ -403,8 +403,14 @@ class PickerPageState extends State<PickerPage> {
           if (index == 0) {
             return GestureDetector(
               onTap: () async {
+                if (_selected.length >= widget.maxSelected) {
+                  if (widget.overMaxSelected != null) {
+                    widget.overMaxSelected!(context);
+                    return;
+                  }
+                }
                 if (widget.onTapCamera != null) {
-                  await widget.onTapCamera!();
+                  cameraFile = await widget.onTapCamera!();
                   await done();
                 }
               },
@@ -485,4 +491,4 @@ class PickController {
 // 超过最大的可选择数量
 typedef OverMaxSelected = Function(BuildContext context);
 
-typedef OnTapCamera = Future<File> Function();
+typedef OnTapCamera = Future<File?> Function();

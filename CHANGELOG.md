@@ -1,4 +1,7 @@
 ## 0.0.9
+- Fix camera bug
+
+## 0.0.9
 - Support camera
 
 ## 0.0.8
