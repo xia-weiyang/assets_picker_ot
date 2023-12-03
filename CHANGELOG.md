@@ -1,3 +1,6 @@
+## 0.0.12
+- upgrade photo_manager
+
 ## 0.0.11
 - Fix camera bug
 
