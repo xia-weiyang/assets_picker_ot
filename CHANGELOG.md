@@ -1,3 +1,6 @@
+## 0.0.13
+- Denying permission does not open the settings page
+
 ## 0.0.12
 - upgrade photo_manager
 

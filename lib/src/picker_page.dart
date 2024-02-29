@@ -83,7 +83,6 @@ class PickerPageState extends State<PickerPage> {
       //   widget.showTip!(null, "您拒绝了相册权限，请前往");
       // }
       Navigator.of(context).pop();
-      PhotoManager.openSetting();
       return false;
     }
   }
