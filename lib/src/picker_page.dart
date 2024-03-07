@@ -8,7 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 class PickerPage extends StatefulWidget {
   const PickerPage({
-    Key? key,
+    super.key,
     this.overMaxSelected,
     this.maxSelected = 1,
     this.showCamera = false,
@@ -21,7 +21,7 @@ class PickerPage extends StatefulWidget {
     this.appBarDone,
     this.iconColor,
     this.titleTextStyle,
-  }) : super(key: key);
+  });
 
   /// 一些错误的提示回调
   final OverMaxSelected? overMaxSelected;
@@ -70,8 +70,8 @@ class PickerPageState extends State<PickerPage> {
 
   /// 权限获取
   Future<bool> _permissionCheck() async {
-    final PermissionState _ps = await PhotoManager.requestPermissionExtend();
-    if (_ps.isAuth) {
+    final PermissionState ps = await PhotoManager.requestPermissionExtend();
+    if (ps.isAuth) {
       // Granted.
       debugPrint("权限已成功获取");
       return true;
@@ -82,6 +82,7 @@ class PickerPageState extends State<PickerPage> {
       // if(widget.showTip != null){
       //   widget.showTip!(null, "您拒绝了相册权限，请前往");
       // }
+      if (!mounted) return false;
       Navigator.of(context).pop();
       return false;
     }
@@ -158,6 +159,7 @@ class PickerPageState extends State<PickerPage> {
     if (cameraFile != null) {
       fileList.add(cameraFile!);
     }
+    if (!mounted) return;
     Navigator.pop(context, fileList);
   }
 
@@ -308,7 +310,7 @@ class PickerPageState extends State<PickerPage> {
                     const SizedBox(height: 6),
                     ..._paths.map((it) {
                       return _buildPathEntityWidget(it);
-                    }).toList(),
+                    }),
                     const SizedBox(height: 6),
                   ],
                 ),

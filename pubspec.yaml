@@ -1,21 +1,20 @@
 name: assets_picker_ot
 description: Quickly select resources from the gallery.
-version: 0.0.13
+version: 1.0.0
 homepage: https://github.com/xia-weiyang/assets_picker_ot
 
 environment:
-  sdk: ">=2.15.1 <4.0.0"
-  flutter: ">=1.17.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  photo_manager: ^3.0.0-dev.4
+  photo_manager: ^3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
+  flutter_lints: ^3.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

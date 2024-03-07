@@ -1,3 +1,6 @@
+## 1.0.0
+- Upgrade dependencies
+
 ## 0.0.13
 - Denying permission does not open the settings page
 

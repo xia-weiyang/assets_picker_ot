@@ -6,9 +6,9 @@ import 'package:photo_manager/photo_manager.dart';
 class ImageItemWidget extends StatefulWidget {
   const ImageItemWidget(
     this.asset, {
-    Key? key,
+    super.key,
     this.showNum = 0,
-  }) : super(key: key);
+  });
 
   final AssetEntity asset;
   final int showNum;
@@ -74,7 +74,7 @@ class ImageItemState extends State<ImageItemWidget> {
                   child: Center(
                     child: Text(
                       widget.showNum.toString(),
-                      textScaleFactor: 1,
+                      textScaler: TextScaler.noScaling,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white,
