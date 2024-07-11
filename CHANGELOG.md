@@ -1,3 +1,6 @@
+## 1.0.1
+- Remove permission check
+
 ## 1.0.0
 - Upgrade dependencies
 

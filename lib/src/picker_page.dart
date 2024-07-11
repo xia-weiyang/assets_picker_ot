@@ -68,26 +68,6 @@ class PickerPageState extends State<PickerPage> {
 
   final ScrollController _scrollController = ScrollController();
 
-  /// 权限获取
-  Future<bool> _permissionCheck() async {
-    final PermissionState ps = await PhotoManager.requestPermissionExtend();
-    if (ps.isAuth) {
-      // Granted.
-      debugPrint("权限已成功获取");
-      return true;
-    } else {
-      // Limited(iOS) or Rejected, use `==` for more precise judgements.
-      // You can call `PhotoManager.openSetting()` to open settings for further steps.
-      debugPrint("权限拒绝 退出当前页面");
-      // if(widget.showTip != null){
-      //   widget.showTip!(null, "您拒绝了相册权限，请前往");
-      // }
-      if (!mounted) return false;
-      Navigator.of(context).pop();
-      return false;
-    }
-  }
-
   /// 获取目录
   Future<void> _getPath() async {
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
@@ -167,9 +147,7 @@ class PickerPageState extends State<PickerPage> {
   void initState() {
     super.initState();
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-      if (await _permissionCheck()) {
-        await _getPath();
-      }
+      await _getPath();
     });
 
     // 滑动监听
