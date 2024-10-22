@@ -21,6 +21,7 @@ class PickerPage extends StatefulWidget {
     this.appBarDone,
     this.iconColor,
     this.titleTextStyle,
+    this.isSelectedVideo = false,
   });
 
   /// 一些错误的提示回调
@@ -41,6 +42,9 @@ class PickerPage extends StatefulWidget {
   final Widget? appBarDone;
   final Color? iconColor;
   final TextStyle? titleTextStyle;
+
+  // 是否支持选择视频
+  final bool isSelectedVideo;
 
   @override
   PickerPageState createState() => PickerPageState();
@@ -71,7 +75,7 @@ class PickerPageState extends State<PickerPage> {
   /// 获取目录
   Future<void> _getPath() async {
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
-      type: RequestType.image,
+      type: widget.isSelectedVideo ? RequestType.common : RequestType.image,
     );
     debugPrint('_getPath $paths');
     _paths.clear();
@@ -129,15 +133,18 @@ class PickerPageState extends State<PickerPage> {
 
   Future<void> done() async {
     if (!mounted) return;
-    final fileList = <File>[];
+    final fileList = <SelectedFile>[];
     for (var it in _selected) {
       final f = await it.loadFile();
       if (f != null) {
-        fileList.add(f);
+        fileList.add(SelectedFile(
+          file: f,
+          type: it.type == AssetType.video ? FileType.video : FileType.image,
+        ));
       }
     }
     if (cameraFile != null) {
-      fileList.add(cameraFile!);
+      fileList.add(SelectedFile(file: cameraFile!, type: FileType.image));
     }
     if (!mounted) return;
     Navigator.pop(context, fileList);
@@ -474,3 +481,14 @@ class PickController {
 typedef OverMaxSelected = Function(BuildContext context);
 
 typedef OnTapCamera = Future<File?> Function();
+
+// 选择的文件
+class SelectedFile {
+  const SelectedFile({required this.file, required this.type});
+
+  final File file;
+  final FileType type;
+}
+
+// 选择的文件类型
+enum FileType { image, video }

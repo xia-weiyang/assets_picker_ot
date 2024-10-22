@@ -14,7 +14,7 @@ Navigator.push(context, MaterialPageRoute(builder: (_con) {
                     },
                   );
                 })).then((value) {
-                  if (value is List<File>) {
+                  if (value is List<SelectedFile>) {
                     // todo selected success
                   }
                 });

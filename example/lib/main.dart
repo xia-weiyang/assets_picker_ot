@@ -36,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _fileList = <File>[];
+  final _fileList = <SelectedFile>[];
 
   @override
   Widget build(BuildContext context) {
@@ -54,13 +54,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   return PickerPage(
                     showCamera: false,
                     maxSelected: 3,
+                    isSelectedVideo: true,
                     overMaxSelected: (context) {
-                      debugPrint('最多选择3张图片');
+                      debugPrint('最多选择3个视频或图片');
                     },
                   );
                 })).then((value) {
                   _fileList.clear();
-                  if (value is List<File>) {
+                  if (value is List<SelectedFile>) {
                     setState(() {
                       _fileList.addAll(value);
                     });
@@ -70,12 +71,22 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('从相册选取'),
             ),
             ..._fileList.map((it) {
-              return Image.file(
-                it,
-                fit: BoxFit.cover,
-                width: 100,
-                height: 100,
-              );
+              debugPrint('${it.type} ${it.file} ');
+              if (it.type == FileType.image) {
+                return Column(
+                  children: [
+                    Text(it.file.path),
+                    Image.file(
+                      it.file,
+                      fit: BoxFit.cover,
+                      width: 100,
+                      height: 100,
+                    ),
+                  ],
+                );
+              } else {
+                return Text(it.file.path);
+              }
             }).toList(),
           ],
         ),

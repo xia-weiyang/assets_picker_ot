@@ -58,6 +58,18 @@ class ImageItemState extends State<ImageItemWidget> {
                 },
               ),
       ),
+      if (widget.asset.type == AssetType.video)
+        const Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Icon(
+              size: 26,
+              Icons.videocam,
+              color: Color(0x99666666),
+            ),
+          ),
+        ),
       widget.showNum <= 0
           ? Container()
           : Align(

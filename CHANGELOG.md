@@ -1,3 +1,6 @@
+## 1.1.0
+- Support select video
+
 ## 1.0.1
 - Remove permission check
 
