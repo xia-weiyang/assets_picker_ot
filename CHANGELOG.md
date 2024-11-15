@@ -1,3 +1,6 @@
+## 1.2.0
+- Support preview video and image
+
 ## 1.1.0
 - Support select video
 

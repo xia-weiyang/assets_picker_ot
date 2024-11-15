@@ -418,11 +418,9 @@ class PickerPageState extends State<PickerPage> {
           index--;
         }
         final entity = _entities[index];
-        return GestureDetector(
-          child: ImageItemWidget(
-            entity,
-            showNum: _selected.indexOf(entity) + 1,
-          ),
+        return ImageItemWidget(
+          entity,
+          showNum: _selected.indexOf(entity) + 1,
           onTap: () {
             final contains = _selected.contains(entity);
             setState(() {
