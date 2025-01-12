@@ -68,6 +68,8 @@ class PickerPageState extends State<PickerPage> {
   // 是否暂无数据
   bool _isNoData = false;
 
+  bool isLoading = false;
+
   final _pageMaxNum = 80;
 
   final ScrollController _scrollController = ScrollController();
@@ -77,7 +79,7 @@ class PickerPageState extends State<PickerPage> {
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
       type: widget.isSelectedVideo ? RequestType.common : RequestType.image,
     );
-    debugPrint('_getPath $paths');
+    debugPrint('Path:$paths');
     _paths.clear();
     assertCount.clear();
     for (var pathEntity in paths) {
@@ -123,11 +125,22 @@ class PickerPageState extends State<PickerPage> {
   /// [start] 开始位置
   Future<void> _queryAssetsList(int start) async {
     if (_currentPath == null) return;
+    if (isLoading) return;
+    isLoading = true;
+    debugPrint(
+        "queryAssetsList currentPath:${_currentPath!.name} start:$start");
     final List<AssetEntity> entities = await _currentPath!
         .getAssetListRange(start: start, end: _pageMaxNum + start);
+    if (start != 0 && entities.isEmpty) {
+      isLoading = false;
+      return;
+    }
     setState(() {
       if (start == 0) _entities.clear();
       _entities.addAll(entities);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((time) {
+      isLoading = false;
     });
   }
 
@@ -153,16 +166,8 @@ class PickerPageState extends State<PickerPage> {
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await _getPath();
-    });
-
-    // 滑动监听
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        _queryAssetsList(_entities.length);
-      }
     });
 
     widget.controller?.done = done;
@@ -381,71 +386,86 @@ class PickerPageState extends State<PickerPage> {
 
   /// 资源网格列表
   Widget _buildGlideWidget() {
-    return GridView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.only(top: 2, bottom: 2),
-      itemCount: _entities.length + (widget.showCamera ? 1 : 0),
-      itemBuilder: (BuildContext context, int index) {
-        if (widget.showCamera) {
-          if (index == 0) {
-            return GestureDetector(
-              onTap: () async {
-                if (_selected.length >= widget.maxSelected) {
-                  if (widget.overMaxSelected != null) {
-                    widget.overMaxSelected!(context);
-                    return;
-                  }
-                }
-                if (widget.onTapCamera != null) {
-                  cameraFile = await widget.onTapCamera!();
-                  if (cameraFile != null) {
-                    await done();
-                  }
-                }
-              },
-              child: widget.cameraWidget ??
-                  SizedBox(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Icon(
-                      Icons.camera_alt_outlined,
-                      size: 50,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-            );
+    return NotificationListener(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollStartNotification) {
+          print("开始滚动");
+        } else if (notification is ScrollUpdateNotification) {
+          //  print("正在滚动，当前偏移: ${notification.metrics.pixels}");
+        } else if (notification is ScrollEndNotification) {
+          if (_scrollController.position.pixels >
+              _scrollController.position.maxScrollExtent - 100) {
+            _queryAssetsList(_entities.length);
           }
-          index--;
         }
-        final entity = _entities[index];
-        return ImageItemWidget(
-          entity,
-          showNum: _selected.indexOf(entity) + 1,
-          onTap: () {
-            final contains = _selected.contains(entity);
-            setState(() {
-              if (contains) {
-                _selected.remove(entity);
-              } else {
-                if (_selected.length >= widget.maxSelected) {
-                  if (widget.overMaxSelected != null) {
-                    widget.overMaxSelected!(context);
-                    return;
-                  }
-                }
-                _selected.add(entity);
-              }
-            });
-          },
-        );
+        return true; // 如果返回 true，阻止通知继续冒泡
       },
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        //单个子Widget的水平最大宽度
-        maxCrossAxisExtent: MediaQuery.of(context).size.width / 4,
-        //水平单个子Widget之间间距
-        mainAxisSpacing: 2,
-        //垂直单个子Widget之间间距
-        crossAxisSpacing: 2,
+      child: GridView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(top: 2, bottom: 2),
+        itemCount: _entities.length + (widget.showCamera ? 1 : 0),
+        itemBuilder: (BuildContext context, int index) {
+          if (widget.showCamera) {
+            if (index == 0) {
+              return GestureDetector(
+                onTap: () async {
+                  if (_selected.length >= widget.maxSelected) {
+                    if (widget.overMaxSelected != null) {
+                      widget.overMaxSelected!(context);
+                      return;
+                    }
+                  }
+                  if (widget.onTapCamera != null) {
+                    cameraFile = await widget.onTapCamera!();
+                    if (cameraFile != null) {
+                      await done();
+                    }
+                  }
+                },
+                child: widget.cameraWidget ??
+                    SizedBox(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: Icon(
+                        Icons.camera_alt_outlined,
+                        size: 50,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+              );
+            }
+            index--;
+          }
+          final entity = _entities[index];
+          return ImageItemWidget(
+            entity,
+            showNum: _selected.indexOf(entity) + 1,
+            onTap: () {
+              final contains = _selected.contains(entity);
+              setState(() {
+                if (contains) {
+                  _selected.remove(entity);
+                } else {
+                  if (_selected.length >= widget.maxSelected) {
+                    if (widget.overMaxSelected != null) {
+                      widget.overMaxSelected!(context);
+                      return;
+                    }
+                  }
+                  _selected.add(entity);
+                }
+              });
+            },
+          );
+        },
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          //单个子Widget的水平最大宽度
+          maxCrossAxisExtent: MediaQuery.of(context).size.width / 4,
+          //水平单个子Widget之间间距
+          mainAxisSpacing: 2,
+          //垂直单个子Widget之间间距
+          crossAxisSpacing: 2,
+        ),
       ),
     );
   }

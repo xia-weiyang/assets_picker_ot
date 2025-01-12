@@ -44,9 +44,9 @@ class ImageItemState extends State<ImageItemWidget> {
             child: Padding(
               padding: EdgeInsets.all(4),
               child: Icon(
-                size: 26,
+                size: 30,
                 Icons.videocam,
-                color: Color(0x99666666),
+                color: Color(0xDD444444),
               ),
             ),
           ),
@@ -63,7 +63,7 @@ class ImageItemState extends State<ImageItemWidget> {
                 height: 26,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  color: Theme.of(context).colorScheme.primary.withAlpha(180),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(220),
                 ),
                 child: Center(
                   child: Text(
@@ -100,17 +100,38 @@ class ImageItemDataWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _ImageItemDataState();
 }
 
+final _cacheMap = <String, Uint8List>{};
+
+void addCacheMap(String key, Uint8List data) {
+  if (_cacheMap.length > 2000) {
+    _cacheMap.remove(_cacheMap.keys.first);
+  }
+  _cacheMap[key] = data;
+}
+
 class _ImageItemDataState extends State<ImageItemDataWidget> {
   String? _path;
-  late Future<Uint8List?> _futureData;
+  Uint8List? thumbData;
 
   /// 获取缩略图
-  Future<Uint8List?> _getThumbFromAssetEntity(
+  _getThumbFromAssetEntity(
     AssetEntity asset,
     int size,
   ) async {
     _path = await _getPath(asset);
-    return await asset.thumbnailDataWithSize(ThumbnailSize(size, size));
+    if (_path == null) {
+      debugPrint("error: path is null");
+      return;
+    }
+    var uint8list = _cacheMap[_path];
+    if (uint8list == null) {
+      uint8list = await asset.thumbnailDataWithSize(ThumbnailSize(size, size));
+      addCacheMap(_path!, uint8list!);
+    }
+
+    setState(() {
+      thumbData = uint8list;
+    });
   }
 
   Future<String?> _getPath(AssetEntity asset) async {
@@ -120,52 +141,51 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
   @override
   void initState() {
     super.initState();
-    _futureData = _getThumbFromAssetEntity(widget.asset, widget.size);
+    _getThumbFromAssetEntity(widget.asset, widget.size);
+  }
+
+  @override
+  void didUpdateWidget(covariant ImageItemDataWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.asset != widget.asset) {
+      _getThumbFromAssetEntity(widget.asset, widget.size);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _futureData,
-      builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasData) {
-            final tag = Random().nextInt(1 << 30).toString();
-            PreviewData preview;
-            if (widget.asset.type == AssetType.video) {
-              preview = PreviewData(
-                heroTag: tag,
-                type: Type.video,
-                video: VideoData(
-                  coverData: snapshot.data!,
-                  url: _path,
-                ),
-              );
-            } else {
-              preview = PreviewData(
-                heroTag: tag,
-                type: Type.image,
-                image: ImageData(
-                  thumbnailData: snapshot.data!,
-                  path: _path,
-                ),
-              );
-            }
-            return PreviewThumbnail(
-              videoShowPlayIcon: false,
-              data: preview,
-              onTap: () {
-                if (widget.onTap != null) {
-                  widget.onTap!();
-                }
-              },
-              onLongTap: () {
-                openPreviewPage(Navigator.of(context), data: preview);
-              },
-            );
-          }
+    if (thumbData == null) return const SizedBox();
+    final tag = Random().nextInt(1 << 30).toString();
+    PreviewData preview;
+    if (widget.asset.type == AssetType.video) {
+      preview = PreviewData(
+        heroTag: tag,
+        type: Type.video,
+        video: VideoData(
+          coverData: thumbData!,
+          url: _path,
+        ),
+      );
+    } else {
+      preview = PreviewData(
+        heroTag: tag,
+        type: Type.image,
+        image: ImageData(
+          thumbnailData: thumbData!,
+          path: _path,
+        ),
+      );
+    }
+    return PreviewThumbnail(
+      videoShowPlayIcon: false,
+      data: preview,
+      onTap: () {
+        if (widget.onTap != null) {
+          widget.onTap!();
         }
-        return const SizedBox();
+      },
+      onLongTap: () {
+        openPreviewPage(Navigator.of(context), data: preview);
       },
     );
   }

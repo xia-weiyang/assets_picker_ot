@@ -1,3 +1,6 @@
+## 1.2.2
+- Fix Image list switching error
+- Optimize scrolling experience
 ## 1.2.1
 - Fix preview video
 ## 1.2.0
