@@ -1,10 +1,10 @@
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_preview/preview.dart';
 import 'package:image_preview/preview_data.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
 class ImageItemWidget extends StatefulWidget {
   const ImageItemWidget(
@@ -93,44 +93,26 @@ class ImageItemDataWidget extends StatefulWidget {
     super.key,
     required this.asset,
     this.onTap,
-    this.size = 100,
+    this.size = 200,
   });
 
   @override
   State<StatefulWidget> createState() => _ImageItemDataState();
 }
 
-final _cacheMap = <String, Uint8List>{};
-
-void addCacheMap(String key, Uint8List data) {
-  if (_cacheMap.length > 2000) {
-    _cacheMap.remove(_cacheMap.keys.first);
-  }
-  _cacheMap[key] = data;
-}
-
 class _ImageItemDataState extends State<ImageItemDataWidget> {
   String? _path;
-  Uint8List? thumbData;
 
   /// 获取缩略图
-  _getThumbFromAssetEntity(
+  _loadPathFromAssetEntity(
     AssetEntity asset,
-    int size,
   ) async {
-    _path = await _getPath(asset);
-    if (_path == null) {
+    final temp = await _getPath(asset);
+    if (temp == null) {
       debugPrint("error: path is null");
-      return;
     }
-    var uint8list = _cacheMap[_path];
-    if (uint8list == null) {
-      uint8list = await asset.thumbnailDataWithSize(ThumbnailSize(size, size));
-      addCacheMap(_path!, uint8list!);
-    }
-
     setState(() {
-      thumbData = uint8list;
+      _path = temp;
     });
   }
 
@@ -141,20 +123,25 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
   @override
   void initState() {
     super.initState();
-    _getThumbFromAssetEntity(widget.asset, widget.size);
+    _loadPathFromAssetEntity(widget.asset);
   }
 
   @override
   void didUpdateWidget(covariant ImageItemDataWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) {
-      _getThumbFromAssetEntity(widget.asset, widget.size);
+      _loadPathFromAssetEntity(widget.asset);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (thumbData == null) return const SizedBox();
+    if (_path == null) return const SizedBox();
+    final provide = AssetEntityImageProvider(
+      widget.asset,
+      isOriginal: false, // Defaults to `true`.
+      thumbnailSize: ThumbnailSize.square(widget.size), // Preferred value.
+    );
     final tag = Random().nextInt(1 << 30).toString();
     PreviewData preview;
     if (widget.asset.type == AssetType.video) {
@@ -162,7 +149,7 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
         heroTag: tag,
         type: Type.video,
         video: VideoData(
-          coverData: thumbData!,
+          coverProvide: provide,
           url: _path,
         ),
       );
@@ -171,11 +158,12 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
         heroTag: tag,
         type: Type.image,
         image: ImageData(
-          thumbnailData: thumbData!,
+          thumbnailProvide: provide,
           path: _path,
         ),
       );
     }
+
     return PreviewThumbnail(
       videoShowPlayIcon: false,
       data: preview,

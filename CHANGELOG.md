@@ -1,3 +1,5 @@
+## 1.2.3
+- Improve image load
 ## 1.2.2
 - Fix Image list switching error
 - Optimize scrolling experience

@@ -198,9 +198,17 @@ class PickerPageState extends State<PickerPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      Text(
-                        _currentPath?.name ?? '',
-                        style: widget.titleTextStyle,
+                      Container(
+                        constraints: BoxConstraints(
+                          maxWidth:
+                              MediaQuery.of(context).size.width - 200, // 设置最大宽度
+                        ),
+                        child: Text(
+                          _currentPath?.name ?? '',
+                          style: widget.titleTextStyle?.copyWith(
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ),
                       Icon(
                         Icons.arrow_drop_down,

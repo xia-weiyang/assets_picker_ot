@@ -1,6 +1,6 @@
 name: assets_picker_ot
 description: Quickly select resources from the gallery.
-version: 1.2.2
+version: 1.2.3
 homepage: https://github.com/xia-weiyang/assets_picker_ot
 
 environment:
@@ -10,7 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   photo_manager: ^3.6.3
-  image_preview: ^1.3.4
+  image_preview: ^1.3.10
+  photo_manager_image_provider: ^2.2.0
 
 dev_dependencies:
   flutter_test:
