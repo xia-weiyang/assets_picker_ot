@@ -1,3 +1,5 @@
+## 1.2.4
+- Fix the bugs that may not be able to load
 ## 1.2.3
 - Improve image load
 ## 1.2.2

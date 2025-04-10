@@ -111,9 +111,11 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
     if (temp == null) {
       debugPrint("error: path is null");
     }
-    setState(() {
-      _path = temp;
-    });
+    if(mounted) {
+      setState(() {
+        _path = temp;
+      });
+    }
   }
 
   Future<String?> _getPath(AssetEntity asset) async {
@@ -123,14 +125,18 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
   @override
   void initState() {
     super.initState();
-    _loadPathFromAssetEntity(widget.asset);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPathFromAssetEntity(widget.asset);
+    });
   }
 
   @override
   void didUpdateWidget(covariant ImageItemDataWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) {
-      _loadPathFromAssetEntity(widget.asset);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadPathFromAssetEntity(widget.asset);
+      });
     }
   }
 
