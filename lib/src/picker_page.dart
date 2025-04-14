@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:assets_picker_ot/src/grid_image_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 class PickerPage extends StatefulWidget {
@@ -75,24 +74,12 @@ class PickerPageState extends State<PickerPage> {
   final ScrollController _scrollController = ScrollController();
 
   /// 获取目录
-  Future<void> _getPath() async {
+  Future<List<AssetPathEntity>> _getPath() async {
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
       type: widget.isSelectedVideo ? RequestType.common : RequestType.image,
     );
     debugPrint('Path:$paths');
-    _paths.clear();
-    assertCount.clear();
-    for (var pathEntity in paths) {
-      assertCount[pathEntity.id] = await pathEntity.assetCountAsync;
-    }
-    _paths.addAll(paths);
-    if (_paths.isNotEmpty) {
-      _tapPathList(_paths.first);
-    } else {
-      setState(() {
-        _isNoData = true;
-      });
-    }
+    return paths;
   }
 
   /// 通过资源ID 获取缩略图
@@ -117,8 +104,9 @@ class PickerPageState extends State<PickerPage> {
       _isSwitchingPath = false;
       _currentPath = pathEntity;
     });
-
-    _queryAssetsList(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queryAssetsList(0);
+    });
   }
 
   /// 查询资源列表
@@ -166,8 +154,32 @@ class PickerPageState extends State<PickerPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('PickerPage initState');
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await _getPath();
+      debugPrint('PickerPage start getPath');
+      final pathList = await _getPath();
+      if (pathList.isEmpty) {
+        setState(() {
+          _isNoData = true;
+        });
+        return;
+      }
+      final assertCountTemp = <String, int>{};
+      for (var pathEntity in pathList) {
+        assertCountTemp[pathEntity.id] = await pathEntity.assetCountAsync;
+      }
+      setState(() {
+        _paths.clear();
+        _paths.addAll(pathList);
+        assertCount.clear();
+        assertCount.addAll(assertCountTemp);
+        _isNoData = false;
+        _isSwitchingPath = false;
+        _currentPath = _paths.first;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queryAssetsList(0);
+      });
     });
 
     widget.controller?.done = done;
@@ -397,7 +409,7 @@ class PickerPageState extends State<PickerPage> {
     return NotificationListener(
       onNotification: (ScrollNotification notification) {
         if (notification is ScrollStartNotification) {
-          print("开始滚动");
+          debugPrint("开始滚动");
         } else if (notification is ScrollUpdateNotification) {
           //  print("正在滚动，当前偏移: ${notification.metrics.pixels}");
         } else if (notification is ScrollEndNotification) {
