@@ -164,21 +164,24 @@ class PickerPageState extends State<PickerPage> {
         });
         return;
       }
-      final assertCountTemp = <String, int>{};
-      for (var pathEntity in pathList) {
-        assertCountTemp[pathEntity.id] = await pathEntity.assetCountAsync;
-      }
+      if (!mounted) return;
       setState(() {
         _paths.clear();
         _paths.addAll(pathList);
-        assertCount.clear();
-        assertCount.addAll(assertCountTemp);
         _isNoData = false;
         _isSwitchingPath = false;
         _currentPath = _paths.first;
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         _queryAssetsList(0);
+        final assertCountTemp = <String, int>{};
+        for (var pathEntity in pathList) {
+          if (!mounted) return;
+          assertCountTemp[pathEntity.id] = await pathEntity.assetCountAsync;
+        }
+        if (!mounted) return;
+        assertCount.clear();
+        assertCount.addAll(assertCountTemp);
       });
     });
 
@@ -373,7 +376,9 @@ class PickerPageState extends State<PickerPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '${pathEntity.name} (${assertCount[pathEntity.id]})',
+                    assertCount.isEmpty
+                        ? pathEntity.name
+                        : '${pathEntity.name} (${assertCount[pathEntity.id]})',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     style: (widget.titleTextStyle ??
