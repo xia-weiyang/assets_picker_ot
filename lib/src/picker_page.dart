@@ -71,6 +71,9 @@ class PickerPageState extends State<PickerPage> {
 
   final _pageMaxNum = 80;
 
+  // 正在确定中
+  bool doing = false;
+
   final ScrollController _scrollController = ScrollController();
 
   /// 获取目录
@@ -134,6 +137,8 @@ class PickerPageState extends State<PickerPage> {
 
   Future<void> done() async {
     if (!mounted) return;
+    if (doing) return;
+    doing = true;
     final fileList = <SelectedFile>[];
     for (var it in _selected) {
       final f = await it.loadFile();
@@ -466,6 +471,10 @@ class PickerPageState extends State<PickerPage> {
             entity,
             showNum: _selected.indexOf(entity) + 1,
             onTap: () {
+              if (doing) {
+                debugPrint('It is being determined. The operation is invalid.');
+                return;
+              }
               final contains = _selected.contains(entity);
               setState(() {
                 if (contains) {

@@ -1,10 +1,10 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_preview/preview.dart';
 import 'package:image_preview/preview_data.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
 class ImageItemWidget extends StatefulWidget {
   const ImageItemWidget(
@@ -102,31 +102,40 @@ class ImageItemDataWidget extends StatefulWidget {
 
 class _ImageItemDataState extends State<ImageItemDataWidget> {
   String? _path;
+  Uint8List? _data;
 
-  /// 获取缩略图
-  _loadPathFromAssetEntity(
+  Future<String> _loadPathFromAssetEntity(
     AssetEntity asset,
   ) async {
+    if (_path != null) return _path!;
     final temp = await _getPath(asset);
     if (temp == null) {
       debugPrint("error: path is null");
+      return '';
     }
-    if(mounted) {
-      setState(() {
-        _path = temp;
-      });
-    }
+    _path = temp;
+    return _path!;
   }
 
   Future<String?> _getPath(AssetEntity asset) async {
     return (await asset.loadFile())?.path;
   }
 
+  /// 获取缩略图
+  void _loadThumbnailData() async {
+    final temp = await widget.asset.thumbnailData;
+    debugPrint('thumbnail success! ${widget.asset}');
+    if (!mounted) return;
+    setState(() {
+      _data = temp;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadPathFromAssetEntity(widget.asset);
+      _loadThumbnailData();
     });
   }
 
@@ -134,20 +143,16 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
   void didUpdateWidget(covariant ImageItemDataWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) {
+      _path = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadPathFromAssetEntity(widget.asset);
+        _loadThumbnailData();
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_path == null) return const SizedBox();
-    final provide = AssetEntityImageProvider(
-      widget.asset,
-      isOriginal: false, // Defaults to `true`.
-      thumbnailSize: ThumbnailSize.square(widget.size), // Preferred value.
-    );
+   if (_data == null) return const SizedBox();
     final tag = Random().nextInt(1 << 30).toString();
     PreviewData preview;
     if (widget.asset.type == AssetType.video) {
@@ -155,8 +160,14 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
         heroTag: tag,
         type: Type.video,
         video: VideoData(
-          coverProvide: provide,
-          url: _path,
+          // coverProvide: AssetEntityImageProvider(
+          //   widget.asset,
+          //   isOriginal: false,
+          // ),
+          coverProvide: MemoryImage(_data!),
+          asyncPath: () async {
+            return await _loadPathFromAssetEntity(widget.asset);
+          },
         ),
       );
     } else {
@@ -164,8 +175,14 @@ class _ImageItemDataState extends State<ImageItemDataWidget> {
         heroTag: tag,
         type: Type.image,
         image: ImageData(
-          thumbnailProvide: provide,
-          path: _path,
+          // thumbnailProvide:AssetEntityImageProvider(
+          //   widget.asset,
+          //   isOriginal: false,
+          // ),
+          thumbnailProvide: MemoryImage(_data!),
+          asyncPath: () async {
+            return await _loadPathFromAssetEntity(widget.asset);
+          },
         ),
       );
     }

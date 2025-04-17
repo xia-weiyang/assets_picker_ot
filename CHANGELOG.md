@@ -1,3 +1,5 @@
+## 1.2.7
+- Fix bug.
 ## 1.2.6
 - Fix the bugs that may not be able to load
 ## 1.2.5
