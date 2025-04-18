@@ -126,6 +126,7 @@ class PickerPageState extends State<PickerPage> {
       isLoading = false;
       return;
     }
+    if (!mounted) return;
     setState(() {
       if (start == 0) _entities.clear();
       _entities.addAll(entities);
